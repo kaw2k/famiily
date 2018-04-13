@@ -1,0 +1,167 @@
+<head>
+    <title>family</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible"
+          content="ie=edge" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="mobile-web-app-capable"
+          content="yes">
+    <meta name="apple-mobile-web-app-capable"
+          content="yes">
+
+    <link rel="apple-touch-icon"
+          href="./icon-180.png">
+    <link rel="icon"
+          sizes="192x192"
+          href="./icon-192.png">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700"
+          rel="stylesheet">
+
+</head>
+
+<body>
+    <div id="setup">
+        <input placeholder="name"
+               autocomplete="off"
+               autocapitalize="none"
+               id="name-input" />
+        <button id="add-person"
+                type="button">add person</button>
+        <button id="start-game"
+                type="button">start game</button>
+    </div>
+
+    <div id="game"
+         class="hidden">
+        <ul id="names"></ul>
+        <button id="finish-game"
+                type="button">finish game</button>
+    </div>
+
+    <style>
+        html {
+            font-size: 5vw;
+            font-family: 'Roboto', sans-serif;
+            box-sizing: border-box;
+        }
+
+        * {
+            font-size: inherit;
+            box-sizing: inherit;
+        }
+
+        *+* {
+            margin-top: .5em;
+        }
+
+        body {
+            margin: 2em;
+        }
+
+        @media only screen and (min-width: 47em) {
+            html {
+                font-size: 2vw;
+            }
+
+            body {
+                width: 50vw;
+                margin: 0 auto;
+            }
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            border: none;
+            background-color: cadetblue;
+            color: white;
+            padding: .5em 1em;
+        }
+
+        input {
+            display: block;
+            width: 100%;
+            border-radius: 3px;
+            padding: .5em 1em;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+
+    <script>
+        // ==================
+        // Constants
+        // ==================
+        var ENTER_KEY = 13
+        var ELEMENTS = {
+            addPerson: document.getElementById('add-person'),
+            startGame: document.getElementById('start-game'),
+            finishGame: document.getElementById('finish-game'),
+            input: document.getElementById('name-input'),
+            setupDiv: document.getElementById('setup'),
+            gameDiv: document.getElementById('game'),
+            names: document.getElementById('names'),
+        }
+
+
+        // ==================
+        // State
+        // ==================
+        var people = []
+
+
+        // ==================
+        // Helpers
+        // ==================
+        function startGame() {
+            addPerson()
+
+            ELEMENTS.setupDiv.className = 'hidden'
+            ELEMENTS.gameDiv.className = ''
+
+            ELEMENTS.names.innerHTML = people.sort(function () {
+                var rand = Math.random() - .5
+                return rand < 0 ? -1 : rand > 0 ? 1 : 0
+            }).map(function (name) {
+                return '<li>' + name + '</li>'
+            }).join('\n')
+
+            people = []
+        }
+
+        function endGame() {
+            ELEMENTS.setupDiv.className = ''
+            ELEMENTS.gameDiv.className = 'hidden'
+        }
+
+        function addPerson() {
+            if (ELEMENTS.input.value && ELEMENTS.input.value.length) {
+                people.push(ELEMENTS.input.value)
+                ELEMENTS.input.value = ''
+            }
+        }
+
+
+        // ==================
+        // Events
+        // ==================
+        ELEMENTS.addPerson.addEventListener('click', addPerson)
+        ELEMENTS.input.addEventListener('keypress', function (e) {
+            if (e.keyCode === ENTER_KEY) {
+                addPerson()
+            }
+        })
+
+        ELEMENTS.startGame.addEventListener('click', startGame)
+        ELEMENTS.finishGame.addEventListener('click', endGame)
+    </script>
+</body>
