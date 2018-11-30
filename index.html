@@ -1,43 +1,44 @@
 <head>
     <title>family</title>
     <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible"
-          content="ie=edge" />
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
 
-    <meta name="mobile-web-app-capable"
-          content="yes">
-    <meta name="apple-mobile-web-app-capable"
-          content="yes">
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
 
-    <link rel="apple-touch-icon"
-          href="./icon-180.png">
-    <link rel="icon"
-          sizes="192x192"
-          href="./icon-192.png">
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700"
-          rel="stylesheet">
-
+    <link rel="apple-touch-icon" href="./icon-180.png" />
+    <link rel="icon" sizes="192x192" href="./icon-192.png" />
+    <link
+        href="https://fonts.googleapis.com/css?family=Roboto:400,700"
+        rel="stylesheet"
+    />
 </head>
 
 <body>
-    <div id="setup">
-        <input placeholder="name"
-               autocomplete="off"
-               autocapitalize="none"
-               id="name-input" />
-        <button id="add-person"
-                type="button">add person</button>
-        <button id="start-game"
-                type="button">start game</button>
+    <div id="loading">Loading...</div>
+
+    <div id="setup" class="hidden">
+        <input
+            type="text"
+            name="thing"
+            placeholder="thing"
+            autocorrect="off"
+            autocomplete="off"
+            autocapitalize="off"
+            autofill="off"
+            id="input"
+        />
+        <button id="add-person" type="button">add</button>
+        <button id="start-game" type="button">start</button>
     </div>
 
-    <div id="game"
-         class="hidden">
+    <div id="game" class="hidden">
         <ul id="names"></ul>
-        <button id="finish-game"
-                type="button">finish game</button>
+        <button id="finish-game" type="button">done</button>
     </div>
 
     <style>
@@ -46,57 +47,49 @@
             font-family: 'Roboto', sans-serif;
             box-sizing: border-box;
         }
-
         * {
             font-size: inherit;
             box-sizing: inherit;
         }
-
-        *+* {
-            margin-top: .5em;
+        * + * {
+            margin-top: 0.5em;
         }
-
         body {
             margin: 2em;
         }
-
         @media only screen and (min-width: 47em) {
             html {
                 font-size: 2vw;
             }
-
             body {
                 width: 50vw;
                 margin: 0 auto;
             }
         }
-
         ul {
             list-style-type: none;
             padding: 0;
         }
-
         button {
             display: block;
             width: 100%;
             border: none;
             background-color: cadetblue;
             color: white;
-            padding: .5em 1em;
+            padding: 0.5em 1em;
         }
-
         input {
             display: block;
             width: 100%;
             border-radius: 3px;
-            padding: .5em 1em;
+            padding: 0.5em 1em;
         }
-
         .hidden {
             display: none;
         }
     </style>
 
+    <script src="https://www.gstatic.com/firebasejs/5.6.0/firebase.js"></script>
     <script>
         // ==================
         // Constants
@@ -106,36 +99,53 @@
             addPerson: document.getElementById('add-person'),
             startGame: document.getElementById('start-game'),
             finishGame: document.getElementById('finish-game'),
-            input: document.getElementById('name-input'),
+            input: document.getElementById('input'),
             setupDiv: document.getElementById('setup'),
             gameDiv: document.getElementById('game'),
+            loadingDiv: document.getElementById('loading'),
             names: document.getElementById('names'),
         }
-
-
-        // ==================
-        // State
-        // ==================
-        var people = []
-
+        var DATABASE = {}
 
         // ==================
         // Helpers
         // ==================
+        function init() {
+            if (!window.firebase) return setTimeout(init, 50)
+
+            window.firebase.initializeApp({
+                apiKey: 'AIzaSyB2pZb5r-VI46v3a1AnLa8LMXmvOVvEAgM',
+                authDomain: 'wt-family.firebaseapp.com',
+                databaseURL: 'https://wt-family.firebaseio.com',
+                projectId: 'wt-family',
+                storageBucket: 'wt-family.appspot.com',
+                messagingSenderId: '653609965128',
+            })
+
+            DATABASE.names = window.firebase.database().ref('/names')
+
+            ELEMENTS.loadingDiv.className = 'hidden'
+            ELEMENTS.setupDiv.className = ''
+
+            setupListeners()
+        }
+
         function startGame() {
-            addPerson()
+            addPerson().then(function() {
+                DATABASE.names.once('value').then(function(snap) {
+                    var people = shuffle(Object.values(snap.val()) || [])
 
-            ELEMENTS.setupDiv.className = 'hidden'
-            ELEMENTS.gameDiv.className = ''
+                    ELEMENTS.setupDiv.className = 'hidden'
+                    ELEMENTS.gameDiv.className = ''
+                    ELEMENTS.names.innerHTML = people
+                        .map(function(name) {
+                            return '<li>' + name + '</li>'
+                        })
+                        .join('\n')
 
-            ELEMENTS.names.innerHTML = people.sort(function () {
-                var rand = Math.random() - .5
-                return rand < 0 ? -1 : rand > 0 ? 1 : 0
-            }).map(function (name) {
-                return '<li>' + name + '</li>'
-            }).join('\n')
-
-            people = []
+                    DATABASE.names.set(null)
+                })
+            })
         }
 
         function endGame() {
@@ -145,23 +155,49 @@
 
         function addPerson() {
             if (ELEMENTS.input.value && ELEMENTS.input.value.length) {
-                people.push(ELEMENTS.input.value)
+                var name = ELEMENTS.input.value
                 ELEMENTS.input.value = ''
+                return DATABASE.names.push(name)
             }
+
+            return Promise.resolve()
         }
 
+        function shuffle(originalArray) {
+            var array = originalArray.slice(0)
+            var currentIndex = array.length,
+                temporaryValue,
+                randomIndex
 
-        // ==================
-        // Events
-        // ==================
-        ELEMENTS.addPerson.addEventListener('click', addPerson)
-        ELEMENTS.input.addEventListener('keypress', function (e) {
-            if (e.keyCode === ENTER_KEY) {
-                addPerson()
+            // While there remain elements to shuffle...
+            while (0 !== currentIndex) {
+                // Pick a remaining element...
+                randomIndex = Math.floor(Math.random() * currentIndex)
+                currentIndex -= 1
+
+                // And swap it with the current element.
+                temporaryValue = array[currentIndex]
+                array[currentIndex] = array[randomIndex]
+                array[randomIndex] = temporaryValue
             }
-        })
 
-        ELEMENTS.startGame.addEventListener('click', startGame)
-        ELEMENTS.finishGame.addEventListener('click', endGame)
+            return array
+        }
+
+        function setupListeners() {
+            ELEMENTS.addPerson.addEventListener('click', addPerson)
+            ELEMENTS.input.addEventListener('keypress', function(e) {
+                if (e.keyCode === ENTER_KEY) {
+                    addPerson()
+                }
+            })
+            ELEMENTS.startGame.addEventListener('click', startGame)
+            ELEMENTS.finishGame.addEventListener('click', endGame)
+        }
+
+        // ==================
+        // Start
+        // ==================
+        init()
     </script>
 </body>
