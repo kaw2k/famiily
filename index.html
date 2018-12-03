@@ -33,7 +33,9 @@
             id="input"
         />
         <button id="add-person" type="button">add</button>
-        <button id="start-game" type="button">start</button>
+        <button id="start-game" type="button">
+            start <span id="count"></span>
+        </button>
     </div>
 
     <div id="game" class="hidden">
@@ -104,6 +106,7 @@
             gameDiv: document.getElementById('game'),
             loadingDiv: document.getElementById('loading'),
             names: document.getElementById('names'),
+            count: document.getElementById('count'),
         }
         var DATABASE = {}
 
@@ -123,6 +126,11 @@
             })
 
             DATABASE.names = window.firebase.database().ref('/names')
+
+            DATABASE.names.on('value', function(snap) {
+                const players = Object.values(snap.val() || []).length
+                ELEMENTS.count.innerHTML = `(${players} players)`
+            })
 
             ELEMENTS.loadingDiv.className = 'hidden'
             ELEMENTS.setupDiv.className = ''
