@@ -1,0 +1,19 @@
+{
+    "name": "family",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "deploy": "npx firebase deploy"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kaw2k/family.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/kaw2k/family/issues"
+    },
+    "homepage": "https://github.com/kaw2k/family#readme"
+}
